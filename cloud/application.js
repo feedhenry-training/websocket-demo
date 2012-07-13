@@ -1,30 +1,35 @@
-var io = require('socket.io');
+var express = require('express');
+
+var app = express.createServer(),
+    io = require('socket.io').listen(app);
+
+app.listen(process.env.FH_PORT || 8888);
+
+app.use(express.static(__dirname + '/../client/default'));
 
 io.sockets.on('connection', function(socket) {
   var username;
 
-  socket.emit('registered', {
-    message: 'you are now connected'
-  });
-
   // Broadcast messages to all clients
   socket.on('message', function(data) {
     if (!username) {
-      // user is registering
-      username = data.message;
-      socket.broadcast.emit('message', {
-        message: username + ' connected'
+      socket.join('room');
+      socket.emit('registered', {
+        message: 'you are now connected'
       });
-      socket.emit('message', {
+
+      // User is registering.
+      // Add them to room and emit connected message
+      // Also send an update to all clients to say this user is connected
+      username = data.message;
+      io.sockets.in('room').emit('message', {
         message: username + ' connected'
       });
       console.log(username + ' connected');
     } else {
+      // User is sending message. Emit to all clients
       var message = username + ': ' + data.message;
-      socket.broadcast.emit('message', {
-        message: message
-      });
-      socket.emit('message', {
+      io.sockets.in('room').emit('message', {
         message: message
       });
       console.log('message=' + message);
@@ -33,8 +38,10 @@ io.sockets.on('connection', function(socket) {
 
   // If user disconnects
   socket.on('disconnect', function() {
-    console.log(username + ' disconnected');
+    var message = username + ' disconnected';
+    io.sockets.in('room').emit('message', {
+      message: message
+    });
+    console.log(message);
   });
 });
-
-io.listen(process.env.FH_PORT);
