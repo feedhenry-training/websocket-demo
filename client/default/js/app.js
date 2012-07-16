@@ -3,23 +3,44 @@ var url = ($fh.APP_MODE_RELEASE === $fh.legacy.appMode ? $fh.legacy.releaseCloud
 var socket = io.connect(url);
 
 socket.on('registered', function (data) {
-  $('#info').text(data.message);
-  $('#send').text('Send');
+  x$('#info').html(data.message);
 });
 
 // broadcast reception
+var counter = 0;
+var shapes = ['circle', 'triangle', 'square'];
 socket.on('message', function (data) {
-  $('#messages').append(data.message + '<br/>');
+  var id = (counter += 1);
+  console.log('id=' + id);
+  x$('body').top('<div id="' + id + '" class="' + shapes[(id%shapes.length)] + '"></div>');
+  var idDiv = x$('#' + id);
+  console.log('added div');
+  idDiv.css({
+    "left":  data.x + 'px',
+    "top": data.y + 'px'
+  });
+  console.log('updated css');
+  //idDiv.addClass('animate');
+  setTimeout(function () {
+    console.log('adding animate class');
+    idDiv.addClass('animate');
+    setTimeout(function () {
+      console.log('removing');
+      idDiv.remove();
+    }, 500);
+  }, 10);
 });
 
-$('#message').keyup(function (e) {
-  if (e.keyCode === 13) {
-    $('#send').trigger('click');
+x$('body').on('touchend', function (e) {
+  console.log('touched');
+  for (var key in e) {
+    console.log('e.' + key + '=' + e[key]);
   }
-});
-$('#send').on('click', function () {
+  console.log('e.changedTouches=' + JSON.stringify(e.changedTouches));
+  console.log('e.touches=' + JSON.stringify(e.touches));
+  console.log('e.targetTouches=' + JSON.stringify(e.targetTouches));
   socket.emit('message', {
-    message: $('#message').val()
+    "x": (e.clientX - 10),
+    "y": (e.clientY - 10)
   });
-  $('#message').val('').focus();
 });
