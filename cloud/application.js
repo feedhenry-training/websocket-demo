@@ -7,41 +7,44 @@ app.listen(process.env.FH_PORT || 8888);
 
 app.use(express.static(__dirname + '/../client/default'));
 
+var userCount = 0;
+var users = [];
+
 io.sockets.on('connection', function(socket) {
-  var username;
+  // new user, generate username and send back registered message
+  var username = 'user#' + (userCount += 1);
+  users.push(username);
+  socket.emit('registered', {
+    "message": "Connected as " + username,
+    "user": username
+  });
 
-  // Broadcast messages to all clients
+  // join common room
+  socket.join('room');
+  // update all clients with new userlist
+  console.log('users:' + users.join(','));
+  io.sockets.in('room').emit('userlist', {
+    users: users
+  });
+
   socket.on('message', function(data) {
-    if (!username) {
-      socket.join('room');
-      socket.emit('registered', {
-        message: 'you are now connected'
-      });
-
-      // User is registering.
-      // Add them to room and emit connected message
-      // Also send an update to all clients to say this user is connected
-      username = data.message;
-      io.sockets.in('room').emit('message', {
-        message: username + ' connected'
-      });
-      console.log(username + ' connected');
-    } else {
-      // User is sending message. Emit to all clients
-      var message = username + ': ' + data.message;
-      io.sockets.in('room').emit('message', {
-        message: message
-      });
-      console.log('message=' + message);
-    }
+    // A user has sent a message. Emit to all clients
+    var message = username + ': ' + data.message;
+    io.sockets.in('room').emit('message', {
+      message: message
+    });
+    console.log('message=' + message);
   });
 
   // If user disconnects
   socket.on('disconnect', function() {
-    var message = username + ' disconnected';
-    io.sockets.in('room').emit('message', {
-      message: message
+    // remove user from user list
+    users.splice(users.indexOf(username), 1);
+
+    // update all clients with new userlist
+    console.log('users:' + users.join(','));
+    io.sockets.in('room').emit('userlist', {
+      users: users
     });
-    console.log(message);
   });
 });
