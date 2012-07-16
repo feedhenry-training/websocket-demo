@@ -10,7 +10,10 @@ app.use(express.static(__dirname + '/../client/default'));
 var userCount = 0;
 var users = [];
 
+
+// Handler new users connecting
 io.sockets.on('connection', function(socket) {
+
   // new user, generate username and send back registered message
   var username = 'user#' + (userCount += 1);
   users.push(username);
@@ -19,24 +22,26 @@ io.sockets.on('connection', function(socket) {
     "user": username
   });
 
-  // join common room
+  // user joins room
   socket.join('room');
+
   // update all clients with new userlist
   console.log('users:' + users.join(','));
   io.sockets.in('room').emit('userlist', {
     users: users
   });
 
+  // Handle user sending a message
   socket.on('message', function(data) {
-    // A user has sent a message. Emit to all clients
     var message = username + ': ' + data.message;
+    // Emit to all clients
     io.sockets.in('room').emit('message', {
       message: message
     });
     console.log('message=' + message);
   });
 
-  // If user disconnects
+  // Handle user disconnects
   socket.on('disconnect', function() {
     // remove user from user list
     users.splice(users.indexOf(username), 1);
