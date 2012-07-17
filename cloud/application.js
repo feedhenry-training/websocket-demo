@@ -1,11 +1,34 @@
 var express = require('express');
+var path = require('path');
 
-var app = express.createServer(),
-    io = require('socket.io').listen(app);
+var app = express.createServer();
+var io = require('socket.io').listen(app);
+io.set('log level', 1);
 
-app.listen(process.env.FH_PORT || 8888);
+var staticPath = path.normalize(__dirname + "/../client/default");
+console.log('staticPath=' + staticPath);
+app.use(express.static(staticPath));
 
-app.use(express.static(__dirname + '/../client/default'));
+var shapes = ['circle', 'triangle', 'square'];
+var shapeCounter = 0;
+var colours = ['#000', '#f33', '#3f3', '#33f', '#ff3', '#3ff', '#f3f', '#f99', '#9f9', '#99f', '#ff9', '#9ff', '#f9f', '#993', '#933', '#393', '#339', '#399', '#999', '#666'];
+var colourCounter = 0;
+
+function nextShape() {
+  return shapes[(shapeCounter += 1) % shapes.length];
+}
+
+function nextColour() {
+  return colours[(colourCounter += 1) % colours.length];
+}
+
+var users = [];
+
+var updateUserList = function() {
+  io.sockets.in('room').emit('userlist', {
+    "users": users
+  });
+};
 
 var userCount = 0;
 var users = [];
@@ -13,43 +36,53 @@ var users = [];
 
 // Handler new users connecting
 io.sockets.on('connection', function(socket) {
+  var shape;
+  var colour;
+  var userObj;
 
-  // new user, generate username and send back registered message
-  var username = 'user#' + (userCount += 1);
-  users.push(username);
-  socket.emit('registered', {
-    "message": "Connected as " + username,
-    "user": username
-  });
+  shape = nextShape();
+  colour = nextColour();
 
-  // user joins room
+  // save user to user list
+  userObj = {
+    "socketId": socket.id,
+    "shape": shape,
+    "colour": colour
+  };
+  users.push(userObj);
+
+  // let user know their info
+  socket.emit('user', userObj);
+
+  // join user to room
   socket.join('room');
 
-  // update all clients with new userlist
-  console.log('users:' + users.join(','));
-  io.sockets.in('room').emit('userlist', {
-    users: users
-  });
+  // let everyone know update to user list
+  updateUserList();
 
-  // Handle user sending a message
+  // Broadcast messages to all clients
   socket.on('message', function(data) {
-    var message = username + ': ' + data.message;
-    // Emit to all clients
-    io.sockets.in('room').emit('message', {
-      message: message
-    });
-    console.log('message=' + message);
+    var message = {
+      "x": data.x,
+      "y": data.y,
+      "shape": shape,
+      "colour": colour
+    };
+    io.sockets.in('room').emit('message', message);
+    //console.log('data=' + JSON.stringify(message));
   });
 
-  // Handle user disconnects
+  // If user disconnects
   socket.on('disconnect', function() {
-    // remove user from user list
-    users.splice(users.indexOf(username), 1);
+    // update user list
+    users.splice(users.indexOf(userObj), 1);
 
-    // update all clients with new userlist
-    console.log('users:' + users.join(','));
-    io.sockets.in('room').emit('userlist', {
-      users: users
-    });
+    // let everyone know update to user list
+    updateUserList();
+
+    var message = socket.id + ' disconnected';
+    //console.log(message);
   });
 });
+
+app.listen(process.env.FH_PORT || 8888);
