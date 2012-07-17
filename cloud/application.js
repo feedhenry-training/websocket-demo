@@ -1,11 +1,13 @@
 var express = require('express');
+var path = require('path');
 
-var app = express.createServer(),
-    io = require('socket.io').listen(app);
+var app = express.createServer();
+var io = require('socket.io').listen(app);
+io.set('log level', 1);
 
-app.listen(process.env.FH_PORT || 8888);
-
-app.use(express.static(__dirname + '/../client/default'));
+var staticPath = path.normalize(__dirname + "/../client/default");
+console.log('staticPath=' + staticPath);
+app.use(express.static(staticPath));
 
 var userCount = 0;
 var users = [];
@@ -53,3 +55,5 @@ io.sockets.on('connection', function(socket) {
     });
   });
 });
+
+app.listen(process.env.FH_PORT || 8888);
