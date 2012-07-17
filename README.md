@@ -10,7 +10,7 @@ All connected clients are shown as a list of shapes, with the current clients sh
 
 <img src="https://github.com/feedhenry/websocket-demo/raw/master/websocket-shapes.png"/>
 
-Chat Demo
+Chat Demo (chat branch)
 --------
 
 Each new client is assigned the the next user id. Enter messages and click/touch 'Send' (or press Enter) to broadcast the message to all clients.
