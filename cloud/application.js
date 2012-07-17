@@ -3,6 +3,7 @@ var path = require('path');
 
 var app = express.createServer();
 var io = require('socket.io').listen(app);
+io.set('log level', 1);
 
 var staticPath = path.normalize(__dirname + "/../client/default");
 console.log('staticPath=' + staticPath);
@@ -21,14 +22,38 @@ function nextColour() {
   return colours[(colourCounter += 1) % colours.length];
 }
 
+var users = [];
+
+var updateUserList = function() {
+  io.sockets.in('room').emit('userlist', {
+    "users": users
+  });
+};
+
 io.sockets.on('connection', function(socket) {
   var shape;
   var colour;
+  var userObj;
 
   shape = nextShape();
   colour = nextColour();
 
+  // save user to user list
+  userObj = {
+    "socketId": socket.id,
+    "shape": shape,
+    "colour": colour
+  };
+  users.push(userObj);
+
+  // let user know their info
+  socket.emit('user', userObj);
+
+  // join user to room
   socket.join('room');
+
+  // let everyone know update to user list
+  updateUserList();
 
   // Broadcast messages to all clients
   socket.on('message', function(data) {
@@ -39,13 +64,19 @@ io.sockets.on('connection', function(socket) {
       "colour": colour
     };
     io.sockets.in('room').emit('message', message);
-    console.log('data=' + JSON.stringify(message));
+    //console.log('data=' + JSON.stringify(message));
   });
 
   // If user disconnects
   socket.on('disconnect', function() {
+    // update user list
+    users.splice(users.indexOf(userObj), 1);
+
+    // let everyone know update to user list
+    updateUserList();
+
     var message = socket.id + ' disconnected';
-    console.log(message);
+    //console.log(message);
   });
 });
 

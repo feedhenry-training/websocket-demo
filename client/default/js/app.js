@@ -1,6 +1,7 @@
 var url = ($fh.APP_MODE_RELEASE === $fh.legacy.appMode ? $fh.legacy.releaseCloudUrl : $fh.legacy.debugCloudUrl);
 
 var socket = io.connect(url);
+var userObj = null;
 
 socket.on('registered', function (data) {
   x$('#info').html(data.message);
@@ -34,6 +35,25 @@ socket.on('message', function (data) {
       idDiv.remove();
     }, 500);
   }, 10);
+});
+
+// server sending my user info, lets save it
+socket.on('user', function (data) {
+  userObj = data;
+});
+
+// user list update
+socket.on('userlist', function (data) {
+  var users = data.users;
+
+  var usersDiv = x$('#users');
+  var usersHtml = '';
+  for (var ui = 0, ul = users.length; ui < ul; ui += 1) {
+    var ut = users[ui];
+    var isMe = ut.socketId === userObj.socketId;
+    usersHtml += '<div class="' + ut.shape + (isMe ? ' isme' : '') + ' listel" style="' + (('triangle' === ut.shape) ? 'border-bottom-color:' : 'background-color:') +  ut.colour + ';"></div>';
+  }
+  usersDiv.inner(usersHtml);
 });
 
 function sendEvent(x, y) {
