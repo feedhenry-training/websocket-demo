@@ -1,0 +1,17 @@
+{
+  "name": "websocket-chat",
+  "description": "Node.js Websocket Chat Server",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/feedhenry/websocket-chat.git"
+  },
+  "author": "David Martin<david.martin@feedhenry.com>",
+  "engines": {
+    "node": "0.6"
+  },
+  "dependencies" : {    
+    "socket.io" : "0.9.6",
+    "express": "2.5.11"
+  }
+}

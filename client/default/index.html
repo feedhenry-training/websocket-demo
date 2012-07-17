@@ -1,0 +1,48 @@
+<style>
+html,body {width:100%;height:100%;}
+*{font-family:arial;color:#999;margin:0;padding:0;}
+.circle {
+  border-radius: 50%;
+}
+.triangle {
+  width:0px; 
+  height:0px; 
+  border-left:10px solid transparent;  /* left arrow slant */
+  border-right:10px solid transparent; /* right arrow slant */
+  border-bottom:20px solid #f00; /* bottom, add background color here */
+  font-size:0px;
+  line-height:0px;
+}
+.square, .circle {
+  width:20px;
+  height:20px;
+  background-color:#f00;
+}
+.square, .circle, .triangle {
+  position: absolute;
+  opacity: 1;
+  -webkit-transform: scale(1,1);
+  -webkit-transition: opacity 500ms ease-in 1ms,-webkit-transform 500ms ease-in 1ms;
+}
+.animate {
+  opacity: 0;
+  -webkit-transform: scale(20,20);
+}
+.isme {
+  -webkit-transform: scale(2,2);
+}
+.listel {
+  margin:10px;
+  position: relative;
+  float:left;
+}
+</style>
+
+<h1>Websocket Demo (socket.io)</h1>
+
+<p id="info">Click/Touch screen to interact</p>
+<div id="users"></div>
+
+<script type="text/javascript" src="/js/socket.io.js"></script>
+<script type="text/javascript" src="/js/xui-2.3.2.min.js"></script> 
+<script type="text/javascript" src="/js/app.js"></script>
