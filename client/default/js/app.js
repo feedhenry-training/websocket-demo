@@ -1,5 +1,5 @@
 var url = ($fh.APP_MODE_RELEASE === $fh.legacy.appMode ? $fh.legacy.releaseCloudUrl : $fh.legacy.debugCloudUrl);
-$('#serverurl').innerHTML('Server URL: ' + url);
+$('#serverurl').html('Server URL: ' + url);
 
 var socket = io.connect(url);
 var userObj = null;
