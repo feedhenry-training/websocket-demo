@@ -1,4 +1,4 @@
-var url = ($fh.APP_MODE_RELEASE === $fh.legacy.appMode ? $fh.legacy.releaseCloudUrl : $fh.legacy.debugCloudUrl);
+var url = ($fh.app_props.mode === "dev" ? $fh.cloud_props.hosts.debugCloudUrl : $fh.cloud_props.hosts.releaseCloudUrl);
 document.getElementById('serverurl').innerHTML = 'Server URL: ' + url;
 var socket = io.connect(url);
 
